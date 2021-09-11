@@ -1,0 +1,8 @@
+/bot/bot.iml
+
+
+/front/node_modules
+/front/package-lock.json
+/front/front.iml
+
+.idea/vcs.xml
