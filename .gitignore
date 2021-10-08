@@ -1,8 +1,19 @@
 /bot/bot.iml
+/bot/node_modules/*
+/bot/package-lock.json
+/bot/*
 
+/db/*
 
-/front/node_modules
+/front/node_modules/*
 /front/package-lock.json
-/front/front.iml
 
-.idea/vcs.xml
+
+/backend/node_modules/*
+/backend/package-lock.json
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr

@@ -1,18 +1,37 @@
+
 <template>
   <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
+    <v-app-bar
+
+        app
+        color="primary"
+        dark
+
+    >
+      <v-spacer></v-spacer>
+      <v-toolbar-items>
+        <v-btn :key="route.name" v-for="route in routes" @click="$router.push(route.path )">{{ route.name }}</v-btn>
+      </v-toolbar-items>
+
+    </v-app-bar>
+    <v-app>
+      <router-view></router-view>
+    </v-app>
   </div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
-
+import router from "@/router/router";
 export default {
   name: 'App',
   components: {
-    HelloWorld
-  }
+
+  },
+  mounted() {
+  },
+  data:  () => ({
+  routes: router.options.routes.filter(value => value.inMenu!==false)
+  })
 }
 </script>
 
