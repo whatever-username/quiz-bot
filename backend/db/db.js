@@ -12,11 +12,11 @@ console.log(dbName)
 console.log(dbAddress)
 module.exports= {
 
-    getQuizes: async function () {
+    getTests: async function () {
         try {
             var client = await getMongoConn();
             let db = client.db(dbName);
-            let dCollection = db.collection('quizes');
+            let dCollection = db.collection('tests');
             let result = await dCollection.find({}).toArray();
             return result;
         } catch (err) {
@@ -25,13 +25,13 @@ module.exports= {
             client.close();
         }
     },
-    getQuizById: async function (quizId, userId) {
+    getTestById: async function (testId, userId) {
         try {
             var client = await getMongoConn();
             let db = client.db(dbName);
-            let dCollection = db.collection('quizes');
+            let dCollection = db.collection('tests');
             let result = await dCollection.find(
-                {user_id: userId, _id: ObjectId(quizId)}
+                {user_id: userId, _id: ObjectId(testId)}
             ).toArray();
             return result.length > 0 ? result[0] : null;
         } catch (err) {
@@ -40,13 +40,13 @@ module.exports= {
             client.close();
         }
     },
-    getQuizById: async function (quizId) {
+    getTestById: async function (testId) {
         try {
             var client = await getMongoConn();
             let db = client.db(dbName);
-            let dCollection = db.collection('quizes');
+            let dCollection = db.collection('tests');
             let result = await dCollection.find(
-                {_id: ObjectId(quizId)}
+                {_id: ObjectId(testId)}
             ).toArray();
             return result.length > 0 ? result[0] : null;
         } catch (err) {
@@ -55,11 +55,11 @@ module.exports= {
             client.close();
         }
     },
-    getQuizesByUserId: async function (userId) {
+    getTestsByUserId: async function (userId) {
         try {
             var client = await getMongoConn();
             let db = client.db(dbName);
-            let dCollection = db.collection('quizes');
+            let dCollection = db.collection('tests');
             let result = await dCollection.find({user_id: userId}, {projection: {"user_id": false}}).toArray();
             return result;
         } catch (err) {
@@ -68,16 +68,16 @@ module.exports= {
             client.close();
         }
     },
-    addQuiz: async function (quiz, userId) {
+    addTest: async function (test, userId) {
         try {
             client = await getMongoConn();
-            quiz.user_id = userId;
-            quiz._id = ObjectId(quiz._id);
+            test.user_id = userId;
+            test._id = ObjectId(test._id);
             db = client.db(dbName);
-            let dCollection = db.collection('quizes');
+            let dCollection = db.collection('tests');
 
-            let result = await dCollection.insertOne(quiz);
-            return await this.getQuizById(result.insertedId, userId);
+            let result = await dCollection.insertOne(test);
+            return await this.getTestById(result.insertedId, userId);
         } catch (err) {
             throw err
         } // catch any mongo error here
@@ -85,17 +85,17 @@ module.exports= {
             client.close();
         } // make sure to close your connection after
     },
-    editQuiz: async function (id, quiz, userId) {
+    editTest: async function (id, test, userId) {
         try {
             client = await getMongoConn();
             db = client.db(dbName);
-            let dCollection = db.collection('quizes');
-            quiz.user_id = userId;
-            quiz._id = ObjectId(id);
+            let dCollection = db.collection('tests');
+            test.user_id = userId;
+            test._id = ObjectId(id);
             const filter = {_id: ObjectId(id), user_id: userId};
 
-            let result = await dCollection.replaceOne(filter, quiz);
-            return await this.getQuizById(quiz._id, userId);
+            let result = await dCollection.replaceOne(filter, test);
+            return await this.getTestById(test._id, userId);
         } catch (err) {
             throw err
         } // catch any mongo error here
@@ -103,11 +103,11 @@ module.exports= {
             client.close();
         } // make sure to close your connection after
     },
-    deleteQuiz: async function (id, userId) {
+    deleteTest: async function (id, userId) {
         try {
             client = await getMongoConn();
             db = client.db(dbName);
-            let dCollection = db.collection('quizes');
+            let dCollection = db.collection('tests');
             let res = await dCollection.deleteOne({_id: ObjectId(id), user_id: userId});
             return res;
         } catch (err) {

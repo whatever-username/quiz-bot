@@ -75,7 +75,7 @@
 </template>
 
 <script>
-import Answer from "@/components/quizes/Answer";
+import Answer from "@/components/tests/Answer";
 import utils from "@/utils";
 import Vue from "vue";
 

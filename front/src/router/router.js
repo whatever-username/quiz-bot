@@ -2,17 +2,17 @@ import VueRouter from "vue-router";
 import Main from "@/pages/Main";
 import Login from "@/pages/Login";
 import Vue from 'vue'
-import Quizes from "@/pages/Quizes";
+import Tests from "@/pages/Tests";
+import Test from "@/components/tests/Test";
 import Posts from "@/pages/Posts";
-import Quiz from "@/components/quizes/Quiz";
 
 
 Vue.use(VueRouter)
 
 const routes = [
     { name:"Главная", path: '/', component: Main },
-    { name:"Тесты",path: '/quizes', component: Quizes },
-    { name:"Тест",path: '/quizes/:id', component: Quiz , inMenu: false},
+    { name:"Тесты",path: '/tests', component: Tests },
+    { name:"Тест",path: '/tests/:id', component: Test , inMenu: false},
     { name:"Посты",path: '/posts', component: Posts },
     { name:"Логин",path: '/login', component: Login }
 ]

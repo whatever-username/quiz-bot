@@ -55,24 +55,24 @@ app.post('/login',async (req, res) => {
     return res.sendStatus(403);
 });
 
-app.get('/quizes', authenticateJWT,async (req, res) => {
-    let quizes = await db.getQuizesByUserId(req.user.id)
+app.get('/tests', authenticateJWT,async (req, res) => {
+    let tests = await db.getTestsByUserId(req.user.id)
 
-    res.json(quizes);
+    res.json(tests);
 });
-app.get('/quizes/:quizId', authenticateJWT,async (req, res) => {
-    console.log(req.params.quizId)
-    if (req.params.quizId){
-        let result = await db.getQuizById(req.params.quizId, req.user.id)
+app.get('/tests/:testId', authenticateJWT,async (req, res) => {
+    console.log(req.params.testId)
+    if (req.params.testId){
+        let result = await db.getTestById(req.params.testId, req.user.id)
         res.json(result);
         return
     }
     res.json({error:true})
 });
-app.post('/quizes',authenticateJWT,async (req, res) => {
+app.post('/tests',authenticateJWT,async (req, res) => {
     if (req.body){
         try {
-            let result = await db.addQuiz(req.body, req.user.id)
+            let result = await db.addTest(req.body, req.user.id)
             res.json(result);
             return
         }catch (error){
@@ -82,20 +82,20 @@ app.post('/quizes',authenticateJWT,async (req, res) => {
     }
     res.json({error:true})
 });
-app.put('/quizes/:quizId', authenticateJWT,async (req, res) => {
-    console.log(req.params.quizId)
-    if (req.params.quizId){
-        let result = await db.editQuiz(req.params.quizId, req.body, req.user.id)
+app.put('/tests/:testId', authenticateJWT,async (req, res) => {
+    console.log(req.params.testId)
+    if (req.params.testId){
+        let result = await db.editTest(req.params.testId, req.body, req.user.id)
         res.json(result);
         return
     }
     res.json({error:true})
 });
-app.delete('/quizes/:quizId', authenticateJWT,async (req, res) => {
+app.delete('/tests/:testId', authenticateJWT,async (req, res) => {
     try {
 
-        if (req.params.quizId){
-            let result = await db.deleteQuiz(req.params.quizId, req.user.id)
+        if (req.params.testId){
+            let result = await db.deleteTest(req.params.testId, req.user.id)
             res.json(result);
             return
         }

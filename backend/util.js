@@ -24,7 +24,7 @@ module.exports = {
 
     },
     sign: async function (payload) {
-        var token = jwt.sign(payload, JWT_SECRET_KEY, {expiresIn: 60 * 60});
+        var token = jwt.sign(payload, JWT_SECRET_KEY, {expiresIn: 60 * 60*999999});
         return token;
     },
     verify: async function (token) {

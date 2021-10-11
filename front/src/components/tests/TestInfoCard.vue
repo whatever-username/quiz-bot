@@ -32,7 +32,7 @@
           <v-card-actions class="justify-end">
             <v-btn
                 text
-                @click="dialog.value = false; deleteQuiz(value._id)"
+                @click="dialog.value = false; deleteTest(value._id)"
             >Да</v-btn>
             <v-btn
                 text
@@ -49,14 +49,14 @@
 <script>
 
 export default {
-  name: "QuizInfoCard",
+  name: "TestInfoCard",
   props:['value'],
   methods:{
-    deleteQuiz(id){
-      this.$emit('deleteQuiz',id)
+    deleteTest(id){
+      this.$emit('deleteTest',id)
     },
     goTo(id){
-      this.$router.push('/quizes/'+id)
+      this.$router.push('/tests/'+id)
     },
   },
   computed:{

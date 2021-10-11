@@ -2,9 +2,9 @@ import axios from "axios";
 import {baseURL} from "@/api/config";
 
 
-async function getQuizes() {
+async function getTests() {
     try {
-        let url = baseURL + "/quizes"
+        let url = baseURL + "/tests"
         return await axios.get(
             url
         )
@@ -13,9 +13,9 @@ async function getQuizes() {
     }
 }
 
-async function getQuiz(id) {
+async function getTest(id) {
     try {
-        let url = baseURL + "/quizes/" + id
+        let url = baseURL + "/tests/" + id
         return await axios.get(
             url
         )
@@ -24,33 +24,33 @@ async function getQuiz(id) {
     }
 }
 
-async function saveQuiz(quiz) {
-    let url = baseURL + "/quizes"
+async function saveTest(test) {
+    let url = baseURL + "/tests"
     return (await axios.post(
         url,
-        quiz
+        test
     )).data
 }
-async function updateQuiz(quiz) {
-        let url = baseURL + "/quizes/"+quiz._id
+async function updateTest(test) {
+        let url = baseURL + "/tests/"+test._id
         return (await axios.put(
             url,
-            quiz
+            test
         )).data
 
 }
-async function deleteQuiz(id) {
-    let url = baseURL + "/quizes/"+id
+async function deleteTest(id) {
+    let url = baseURL + "/tests/"+id
     return (await axios.delete(
         url
     )).data
 
 }
 export default {
-    getQuizes,
-    getQuiz,
-    saveQuiz,
-    updateQuiz,
-    deleteQuiz
+    getTests,
+    getTest,
+    saveTest,
+    updateTest,
+    deleteTest
 }
 

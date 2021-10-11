@@ -5,18 +5,18 @@
       <v-text-field
           label="Название теста"
           outlined
-          v-model="quiz.name"
+          v-model="test.name"
       ></v-text-field>
     </v-card-title>
     <v-row no-gutters
            :key="question.id"
-           v-for="(question,index) in quiz.questions"
+           v-for="(question,index) in test.questions"
     >
       <v-col>
         <Question
             @deleteQuestion="deleteQuestion(index)"
             @updateQuestionPosition="(...args)=>updateQuestionPosition(index, args)"
-            v-model="quiz.questions[index]"
+            v-model="test.questions[index]"
             :index="index"
         ></Question>
       </v-col>
@@ -49,73 +49,73 @@
 </template>
 
 <script>
-import Question from "@/components/quizes/Question";
+import Question from "@/components/tests/Question";
 import utils from "@/utils";
 import Vue from "vue";
-import quizes from "@/api/quizes";
+import tests from "@/api/tests";
 export default {
-  name: "Quiz",
+  name: "Test",
   components: {Question},
   methods: {
     async save(){
-      let quiz = utils.trimQuizIds(this.quiz);
-      console.log(quiz)
-      if (quiz._id){
-        quiz = await quizes.updateQuiz(quiz)
+      let test = utils.trimTestIds(this.test);
+      console.log(test)
+      if (test._id){
+        test = await tests.updateTest(test)
       }else {
-        quiz = await quizes.saveQuiz(quiz)
+        test = await tests.saveTest(test)
       }
-      console.log(JSON.stringify(quiz))
-      this.quiz=utils.addQuizIds(quiz);
-      console.log(this.quiz)
-      this.$router.replace("/quizes/"+quiz._id)
+      console.log(JSON.stringify(test))
+      this.test=utils.addTestIds(test);
+      console.log(this.test)
+      this.$router.replace("/tests/"+test._id)
     },
     back(){
-      this.$router.push("/quizes")
+      this.$router.push("/tests")
     },
-    getQuiz(id){
+    getTest(id){
       console.log(id)
-      quizes.getQuiz(id).then(value => {
+      tests.getTest(id).then(value => {
         console.log(value)
-        this.quiz = value.data
-        this.buffered =JSON.parse(JSON.stringify(this.quiz));
-        utils.addQuizIds(this.quiz)
+        this.test = value.data
+        this.buffered =JSON.parse(JSON.stringify(this.test));
+        utils.addTestIds(this.test)
         this.dataLoading = false
       });
     },
     updateQuestionPosition(index,args){
        let dir = args[0];
       if(dir==='up' && index>=1){
-        let buf = this.quiz.questions[index-1];
-        Vue.set(this.quiz.questions, index-1, this.quiz.questions[index])
-        Vue.set(this.quiz.questions, index, buf)
+        let buf = this.test.questions[index-1];
+        Vue.set(this.test.questions, index-1, this.test.questions[index])
+        Vue.set(this.test.questions, index, buf)
 
-      }else if (dir==='down' && index<this.quiz.questions.length-1){
-        let buf = this.quiz.questions[index+1];
-        Vue.set(this.quiz.questions, index+1, this.quiz.questions[index])
-        Vue.set(this.quiz.questions, index, buf)
+      }else if (dir==='down' && index<this.test.questions.length-1){
+        let buf = this.test.questions[index+1];
+        Vue.set(this.test.questions, index+1, this.test.questions[index])
+        Vue.set(this.test.questions, index, buf)
       }
     },
     deleteQuestion(index){
-      this.quiz.questions.splice(index,1);
+      this.test.questions.splice(index,1);
     },
     addQuestion() {
 
-      this.quiz.questions.push(utils.getDefaultQuestionJSON())
+      this.test.questions.push(utils.getDefaultQuestionJSON())
     },
   },
   data() {
     return {
       buffered :{},
-      quiz: {},
+      test: {},
       dataLoading:true
     }
   },
   created() {
     if (this.$route.params.id!=='new'){
-      this.getQuiz(this.$route.params.id)
+      this.getTest(this.$route.params.id)
     }else {
-      this.quiz = utils.getDefaultQuizJSON();
+      this.test = utils.getDefaultTestJSON();
       this.dataLoading = false
     }
 

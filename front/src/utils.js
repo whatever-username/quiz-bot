@@ -7,7 +7,7 @@ function create_UUID() {
     });
     return uuid;
 }
-function getDefaultQuizJSON(){
+function getDefaultTestJSON(){
     return {
         name:"Тест",
         questions:[
@@ -44,31 +44,31 @@ function getDefaultAnswerJSON() {
     };
 }
 
-function addQuizIds(quiz) {
-    quiz.questions.forEach(q => {
+function addTestIds(test) {
+    test.questions.forEach(q => {
         q.id = create_UUID()
         q.answers.map(a => {
             a.id = create_UUID()
         })
     })
-    return quiz;
+    return test;
 }
 
-function trimQuizIds(quiz) {
-    quiz.questions.map(q => {
+function trimTestIds(test) {
+    test.questions.map(q => {
         delete q.id;
         q.answers.map(a => {
             delete a.id;
         })
     })
-    return quiz;
+    return test;
 }
 
 export default {
     create_UUID,
     getDefaultQuestionJSON,
     getDefaultAnswerJSON,
-    getDefaultQuizJSON,
-    trimQuizIds,
-    addQuizIds
+    getDefaultTestJSON,
+    trimTestIds,
+    addTestIds
 }
