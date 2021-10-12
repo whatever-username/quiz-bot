@@ -7,21 +7,19 @@ function create_UUID() {
     });
     return uuid;
 }
-function getDefaultTestJSON(){
+function getDefaultTestJSON(type){
     return {
         name:"Тест",
+        type: (type==='quiz' ? 'quiz':'poll'),
         questions:[
-            getDefaultQuestionJSON(), getDefaultQuestionJSON()
+            getDefaultQuestionJSON(type), getDefaultQuestionJSON(type)
         ]
     }
 }
-function getDefaultQuestionJSON() {
-    return {
-        id: create_UUID(),
-        text: "",
-        answerComment: "",
-        time: 60,
-        answers: [
+function getDefaultQuestionJSON(type) {
+    let answers=[];
+    if (type=='quiz'){
+        answers=[
             {
                 id: create_UUID(),
                 text: '',
@@ -30,9 +28,27 @@ function getDefaultQuestionJSON() {
             {
                 id: create_UUID(),
                 text: '',
-                correct: true
+                correct: false
             }
         ]
+    }else {
+        answers=[
+            {
+                id: create_UUID(),
+                text: ''
+            },
+            {
+                id: create_UUID(),
+                text: ''
+            }
+        ]
+    }
+    return {
+        id: create_UUID(),
+        text: "",
+        answerComment: "",
+        time: 60,
+        answers: answers
     };
 }
 
@@ -63,8 +79,12 @@ function trimTestIds(test) {
     })
     return test;
 }
+function randomIntFromInterval(min, max) { // min and max included
+    return Math.floor(Math.random() * (max - min + 1) + min)
+}
 
 export default {
+    randomIntFromInterval,
     create_UUID,
     getDefaultQuestionJSON,
     getDefaultAnswerJSON,

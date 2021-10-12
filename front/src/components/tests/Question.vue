@@ -4,9 +4,11 @@
       <v-toolbar
           dark
       >
-        {{"Вопрос №"+(this.index+1)}}
+        {{ "Вопрос №" + (this.index + 1) }}
         <v-spacer></v-spacer>
-        <v-text-field hide-details v-model="question.time" label="Время на ответ (секунд)" dense outlined class="centered-input text--darken-3" type="number" placeholder="30" min="30" max="600"></v-text-field>
+        <v-text-field hide-details v-model="question.time" label="Время на ответ (секунд)" dense outlined
+                      class="centered-input text--darken-3" type="number" placeholder="30" min="30"
+                      max="600"></v-text-field>
         <v-icon color="white" @click="updateQuestionPosition('up')">mdi-arrow-up</v-icon>
         <v-icon color="white" @click="updateQuestionPosition('down')">mdi-arrow-down</v-icon>
         <v-icon color="red" @click="deleteQuestion">mdi-close-circle</v-icon>
@@ -35,8 +37,8 @@
       </v-row>
       <v-row no-gutters class="my-3">
         <v-col cols="1">№</v-col>
-        <v-col cols="8">Текст</v-col>
-        <v-col cols="2">Правильный?</v-col>
+        <v-col :cols="type==='quiz'? 8:10">Текст</v-col>
+        <v-col v-if="type==='quiz'" cols="2">Правильный?</v-col>
         <v-col cols="1"></v-col>
       </v-row>
       <v-row no-gutters
@@ -48,11 +50,12 @@
         </v-col>
         <v-col>
           <Answer
+              :type="type"
               v-model="question.answers[index]"
               @input="handleInput(index)"
               @deleteAnswer="deleteAnswer(index)"
               @updateAnswerPosition="(...args)=>updateAnswerPosition(index, args)"
-
+              @changeAnswerCorrectness="changeAnswerCorrectness(index)"
           >
           </Answer>
         </v-col>
@@ -82,7 +85,7 @@ import Vue from "vue";
 export default {
   name: "Question",
   components: {Answer},
-  props: ['value','index'],
+  props: ['value', 'index', 'type'],
   data() {
     return {
       answersSizeAlertShown: false,
@@ -92,19 +95,30 @@ export default {
   mounted() {
   },
   methods: {
-    updateQuestionPosition(dir){
+    changeAnswerCorrectness(index) {
+      let newIndex
+      if (this.question.answers[index].correct){
+        newIndex = index===0 ? 1:0;
+      }else{
+        newIndex = this.question.answers.findIndex(value => value.correct);
+      }
+      Vue.set(this.question.answers[index], 'correct', !this.question.answers[index].correct)
+      Vue.set(this.question.answers[newIndex], 'correct', !this.question.answers[newIndex].correct)
+    },
+
+    updateQuestionPosition(dir) {
       this.$emit('updateQuestionPosition', dir)
     },
-    updateAnswerPosition(index,args){
+    updateAnswerPosition(index, args) {
       let dir = args[0];
-      if(dir==='up' && index>=1){
-        let buf = this.question.answers[index-1];
-        Vue.set(this.question.answers, index-1, this.question.answers[index])
+      if (dir === 'up' && index >= 1) {
+        let buf = this.question.answers[index - 1];
+        Vue.set(this.question.answers, index - 1, this.question.answers[index])
         Vue.set(this.question.answers, index, buf)
 
-      }else if (dir==='down' && index<this.question.answers.length-1){
-        let buf = this.question.answers[index+1];
-        Vue.set(this.question.answers, index+1, this.question.answers[index])
+      } else if (dir === 'down' && index < this.question.answers.length - 1) {
+        let buf = this.question.answers[index + 1];
+        Vue.set(this.question.answers, index + 1, this.question.answers[index])
         Vue.set(this.question.answers, index, buf)
       }
     },
@@ -132,11 +146,13 @@ export default {
       }
       this.question.answers.splice(index, 1);
     },
-    deleteQuestion(){
+    deleteQuestion() {
       this.$emit("deleteQuestion");
     }
-  }
+  },
+
 }
+
 </script>
 
 <style scoped>

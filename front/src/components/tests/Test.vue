@@ -1,12 +1,13 @@
 <template>
   <v-container>
   <v-card>
-    <v-card-title>
-      <v-text-field
-          label="Название теста"
-          outlined
-          v-model="test.name"
-      ></v-text-field>
+    <v-card-title style="display:block;">
+          <v-text-field
+              label="Название теста"
+              outlined
+              v-model="test.name"
+          ></v-text-field>
+        <div>Тип: {{test.type==='poll'? 'Опрос':'Викторина'}}</div>
     </v-card-title>
     <v-row no-gutters
            :key="question.id"
@@ -14,6 +15,7 @@
     >
       <v-col>
         <Question
+            :type="test.type"
             @deleteQuestion="deleteQuestion(index)"
             @updateQuestionPosition="(...args)=>updateQuestionPosition(index, args)"
             v-model="test.questions[index]"
@@ -115,7 +117,8 @@ export default {
     if (this.$route.params.id!=='new'){
       this.getTest(this.$route.params.id)
     }else {
-      this.test = utils.getDefaultTestJSON();
+      this.test = utils.getDefaultTestJSON(this.$route.query.type);
+      console.log(this.test)
       this.dataLoading = false
     }
 

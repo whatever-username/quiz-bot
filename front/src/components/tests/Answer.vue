@@ -6,12 +6,12 @@
           label="Текст ответа"
           outlined
           v-model="answer.text"
-          :background-color="answer.correct ? '#b4ff92' : '#ff8e9f'"
+          :background-color="type==='quiz' ? answer.correct ? '#b4ff92' : '#ff8e9f' : '#ffffff'"
       ></v-text-field>
     </v-col>
-    <v-col cols="2">
+    <v-col cols="2" v-if="type==='quiz'">
       <v-switch class="my-0"
-
+                @click.native.capture.stop="changeAnswerCorrectness"
                 v-model="answer.correct"
                 :color="answer.correct ? '#b4ff92' : '#ff8e9f'"
       ></v-switch>
@@ -28,7 +28,7 @@
 <script>
 export default {
   name: "Answer",
-  props: ['value'],
+  props: ['value', 'type'],
   data() {
     return {
       answer: this.value
@@ -37,6 +37,9 @@ export default {
   mounted() {
   },
   methods: {
+    changeAnswerCorrectness(){
+      this.$emit("changeAnswerCorrectness");
+    },
     updateAnswerPosition(dir){
       this.$emit('updateAnswerPosition', dir)
     },
