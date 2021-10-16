@@ -5,13 +5,15 @@ const util = require('./util');
 const app = express()
 var cors = require('cors')
 var jwt = require('jsonwebtoken');
-
+var axios = require('axios');
 app.use(bodyParser.json());
 
 const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY;
+const BOT_TOKEN = process.env.BOT_TOKEN;
 console.log("JWT_SECRET_KEY:"+JWT_SECRET_KEY)
 const port = process.env.BACKEND_PORT;
 console.log("BACKEND_PORT:"+port)
+var AUTH_CODES_CACHE= {};
 
 const authenticateJWT = (req, res, next) => {
     const authHeader = req.headers.authorization;
@@ -53,6 +55,66 @@ app.post('/login',async (req, res) => {
         return;
     }
     return res.sendStatus(403);
+});
+app.post('/login/bot_code',async (req, res) => {
+
+    let body = req.body;
+    if (!body || !body.username){
+        res.send('Не указан username пользователя');
+    }
+    let username = body.username;
+    let user= await db.getUserByUsername(username);
+    if(!user){
+        res.send('Пользователь не найден');
+        return
+    }
+    if (AUTH_CODES_CACHE[user.id]){
+        res.send('Таймаут на отправку кода');
+        return
+    }
+    let code = '';
+    for (let i = 0; i < 4; i++) {
+        code=code.concat(parseInt(Math.random()*10))
+    }
+    let text = "Код будет действителен в течение 60 секунд\n"+code
+    let resp = await axios.post("https://api.telegram.org/bot"+BOT_TOKEN+"/sendMessage", null, { params: {
+            chat_id:user.id,
+            text: text
+        }});
+    AUTH_CODES_CACHE[user.id]=code
+    setTimeout(()=>{
+        delete AUTH_CODES_CACHE[user.id]
+    },60*1000)
+    console.log(AUTH_CODES_CACHE)
+    res.send("Код отправлен");
+});
+app.post('/login/bot_code/check',async (req, res) => {
+
+    let body = req.body;
+    if (!body || !body.username || !body.code){
+        return res.sendStatus(400)
+    }
+    let username = body.username;
+    let code = body.code;
+    let user;
+    try{
+        user = await db.getUserByUsername(username);
+    }catch (ex){
+        log.error(ex);
+        res.sendStatus(404);
+        return
+    }
+    console.log(AUTH_CODES_CACHE)
+    if (AUTH_CODES_CACHE[user.id]===(code+"")){
+        const accessToken = await util.sign(user);
+        res.json({
+            accessToken
+        });
+        delete AUTH_CODES_CACHE[user.id]
+        return
+    }
+
+    res.sendStatus(404);
 });
 
 app.get('/tests', authenticateJWT,async (req, res) => {

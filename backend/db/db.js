@@ -136,6 +136,25 @@ module.exports= {
             client.close();
         } // make sure to close your connection after
     },
+    getUserByUsername: async function (username) {
+        try {
+            client = await getMongoConn();
+            db = client.db(dbName);
+            let dCollection = db.collection('users');
+            let res = await dCollection.find({"username": username}).toArray();
+            res = res.map(s => {
+                s.id = s._id;
+                delete s._id;
+                return s;
+            });
+            return (res && res[0]) ? res[0] : null;
+        } catch (err) {
+            console.error(err);
+        } // catch any mongo error here
+        finally {
+            client.close();
+        } // make sure to close your connection after
+    },
     saveUser: async function (user) {
         user._id = user.id
         delete user.id;

@@ -1,13 +1,16 @@
 <template>
   <v-container>
-    <v-card :color="'#1fbcf0'">
+    <v-card :color="'#e8d6f1'">
       <v-toolbar
           dark
       >
         {{ "Вопрос №" + (this.index + 1) }}
         <v-spacer></v-spacer>
         <v-text-field hide-details v-model="question.time" label="Время на ответ (секунд)" dense outlined
-                      class="centered-input text--darken-3" type="number" placeholder="30" min="30"
+                      class="centered-input text--darken-3" type="number" placeholder="30" min="10"
+                      oninput="setTimeout(()=>{
+                              if(Number(this.value) > Number(this.max)) this.value = this.max;if(Number(this.value) < Number(this.min)) this.value = this.min;
+                            },1000)"
                       max="600"></v-text-field>
         <v-icon color="white" @click="updateQuestionPosition('up')">mdi-arrow-up</v-icon>
         <v-icon color="white" @click="updateQuestionPosition('down')">mdi-arrow-down</v-icon>
@@ -21,15 +24,11 @@
             v-model="question.text"
         ></v-text-field>
       </v-card-title>
-      <v-row no-gutters>
+      <v-row no-gutters v-if="type==='quiz'">
         <v-col>
-          <v-text-field
-              class="px-4"
-              label="Пояснение к правильному ответу"
-              outlined
-              :color="'#ffffff'"
-              v-model="question.answerComment"
-          ></v-text-field>
+          <p>Пояснение к правильному ответу</p>
+          <TextEditor class="px-4 my-5" v-model="question.answerComment" style="width: 100%"></TextEditor>
+
         </v-col>
       </v-row>
       <v-row no-gutters>
@@ -81,10 +80,11 @@
 import Answer from "@/components/tests/Answer";
 import utils from "@/utils";
 import Vue from "vue";
+import TextEditor from "@/components/TextEditor";
 
 export default {
   name: "Question",
-  components: {Answer},
+  components: {Answer, TextEditor},
   props: ['value', 'index', 'type'],
   data() {
     return {
@@ -157,6 +157,5 @@ export default {
 
 <style scoped>
 .centered-input >>> input {
-  text-align: center
 }
 </style>

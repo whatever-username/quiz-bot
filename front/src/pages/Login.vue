@@ -1,48 +1,133 @@
 <template>
   <div class="container">
-<v-btn @click="login">login</v-btn>
-<!--    <vue-telegram-login-->
-<!--        mode="callback"-->
-<!--        telegram-login="mark_quiz_bot"-->
-<!--        @callback="login"-->
-<!--         />-->
-<!--    <b-card
-        v-else
-        :title="userInfo.username"
-        :img-src="userInfo.photo_url"
-        img-alt="Image"
-        img-top
-        tag="article"
-        style="max-width: 20rem"
-        class="mb-2"
-    >
-      <b-button variant="danger" @click="logout">Logout</b-button>
-    </b-card>-->
+    <div v-if="!getStorageToken">
+      <v-card>
+        <div style="display: flex">
+          <v-text-field outlined dense prefix="@" placeholder="Telegram username" v-if="!codeSent"
+                        v-model="telegramUsername"
+          ></v-text-field>
+          <v-text-field outlined dense placeholder="Код" v-if="codeSent"
+                        v-model="code"
+          ></v-text-field>
+          <v-btn v-if="codeSent" @click="checkCode">Отправить код</v-btn>
+          <v-btn :disabled="getCodeButtonBlocked" @click="getCode">
+            {{ getCodeButtonBlocked ? getCodeButtonTimeout : "Проверить код" }}
+          </v-btn>
+        </div>
+
+      </v-card>
+          <vue-telegram-login
+              mode="callback"
+              telegram-login="mark_quiz_bot"
+              @callback="login"/>
+
+    </div>
+
+    <div v-else>
+
+      <v-btn @click="logout">Выйти</v-btn>
+    </div>
+
+    <v-overlay v-model="errorVisible">
+      <v-alert
+          type="error"
+      >{{ errorText }}
+      </v-alert>
+    </v-overlay>
+    <v-overlay v-model="successVisible">
+      <v-alert
+          type="success"
+      >{{ successText }}
+      </v-alert>
+    </v-overlay>
   </div>
 </template>
 
 <script>
-// import {vueTelegramLogin} from 'vue-telegram-login'
+import {vueTelegramLogin} from 'vue-telegram-login'
 import router from "@/router/router";
 import auth from "@/api/auth";
 
 export default {
   name: "Login",
-  // components: {vueTelegramLogin},
-  methods:{
+  components: {vueTelegramLogin},
+
+  data() {
+    return {
+      code: "",
+      codeSent: false,
+      telegramUsername: "",
+      getCodeButtonBlocked: false,
+      getCodeButtonTimeout: 60,
+      question: this.value,
+      errorText: "",
+      errorVisible: false,
+      successText: "",
+      successVisible: false
+    }
+  },
+  methods: {
+    logout(){
+      delete localStorage.token
+      this.reload()
+    },
+    showError(text) {
+      this.errorText = text;
+      this.errorVisible = true;
+      setTimeout(() => {
+        this.errorVisible = false
+      }, 1000)
+    },
+    showSuccess(text) {
+      this.successText = text;
+      this.successVisible = true;
+      setTimeout(() => {
+        this.successVisible = false
+      }, 1000)
+    },
+    async checkCode() {
+      let res = await auth.validateCode(this.telegramUsername, this.code)
+      if (res.data) {
+        localStorage.token = res.data.accessToken
+        router.push("/");
+      }
+    },
+    async getCode() {
+      let res = await auth.getCode(this.telegramUsername)
+      if (res.data) {
+        if (res.data === "Код отправлен") {
+          this.showSuccess(res.data)
+          this.getCodeButtonBlocked = true;
+          this.codeSent = true
+          setInterval(() => {
+            this.getCodeButtonTimeout = this.getCodeButtonTimeout - 1;
+            if (this.getCodeButtonTimeout < 0) {
+              this.getCodeButtonBlocked = false;
+              this.getCodeButtonTimeout = 60
+            }
+          }, 1000)
+
+        } else {
+          this.showError(res.data)
+        }
+        return
+      }
+    },
     async login(user) {
-      user.toString();
-      let userData ={id:74374352,first_name:"Иннокентий",
-         username:"galleySlave",photo_url:"https://t.me/i/userpic/320/F3rqk8wy4nc1mqxU4PRwwJ6IKtfKqJGD8GMkHiv-SxU.jpg",
-          auth_date:1631927256,hash:"346cdedad09b6fc149ed9ecc0a45ebcaf50687b24bc9fdad8ca3cc4037c078c4"};
-      let resp = await auth.login(userData);
+      let resp = await auth.login(user);
       console.log(resp)
-      if (resp){
+      if (resp) {
         localStorage.token = resp.data.accessToken
         router.push("/");
       }
     },
-  }
+  },
+   computed:{
+     getStorageToken(){
+       return localStorage.token
+
+     }
+   }
 }
 </script>
 

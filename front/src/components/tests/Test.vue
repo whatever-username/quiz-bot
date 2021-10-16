@@ -9,6 +9,26 @@
           ></v-text-field>
         <div>Тип: {{test.type==='poll'? 'Опрос':'Викторина'}}</div>
     </v-card-title>
+    <v-row>
+      <v-col>
+        <v-expansion-panels>
+        <v-expansion-panel>
+          <v-expansion-panel-header>
+            Настройки теста
+          </v-expansion-panel-header>
+          <v-expansion-panel-content>
+              <v-text-field hide-details v-model="defaultAnswerTime" label="Время на ответ (секунд) для всех вопросов" dense outlined
+                            class="centered-input text--darken-3" type="number" placeholder="30" min="10"
+                            oninput="setTimeout(()=>{
+                              if(Number(this.value) > Number(this.max)) this.value = this.max;if(Number(this.value) < Number(this.min)) this.value = this.min;
+                            },1000)"
+                            max="600">
+              </v-text-field>
+          </v-expansion-panel-content>
+        </v-expansion-panel>
+        </v-expansion-panels>
+      </v-col>
+    </v-row>
     <v-row no-gutters
            :key="question.id"
            v-for="(question,index) in test.questions"
@@ -46,6 +66,12 @@
           size="64"
       ></v-progress-circular>
     </v-overlay>
+    <v-overlay v-model="savedAlertPopup">
+      <v-alert
+          type="success"
+      >Тест сохранен</v-alert>
+    </v-overlay>
+
   </v-card>
   </v-container>
 </template>
@@ -71,6 +97,7 @@ export default {
       this.test=utils.addTestIds(test);
       console.log(this.test)
       this.$router.replace("/tests/"+test._id)
+      this.toggleSavedAlertPopup();
     },
     back(){
       this.$router.push("/tests")
@@ -105,12 +132,20 @@ export default {
 
       this.test.questions.push(utils.getDefaultQuestionJSON())
     },
+    toggleSavedAlertPopup(){
+      this.savedAlertPopup=true;
+      setTimeout(()=>{
+        this.savedAlertPopup=false;
+      },1000)
+    }
   },
   data() {
     return {
       buffered :{},
       test: {},
-      dataLoading:true
+      defaultAnswerTime: null,
+      dataLoading:true,
+      savedAlertPopup: false
     }
   },
   created() {
@@ -122,6 +157,13 @@ export default {
       this.dataLoading = false
     }
 
+  },
+  watch:{
+    defaultAnswerTime: function (val){
+      this.test.questions.forEach(value => {
+        value.time = val;
+      })
+    }
   }
 }
 </script>

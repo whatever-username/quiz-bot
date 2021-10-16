@@ -5,7 +5,6 @@ export const baseURL = process.env.VUE_APP_BACKEND_BASE_URL+":"+process.env.VUE_
 console.log("baseURL: "+baseURL)
 axios.interceptors.request.use(req => {
     let token = localStorage.token;
-    console.log(req)
     if (!token && !req.url.includes("/login")){
         router.push("/login")
     }
