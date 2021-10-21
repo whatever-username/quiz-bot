@@ -20,6 +20,8 @@ async function login(userData) {
             {username}
         ).then(response => {
            return response;
+        }).catch(reason => {
+            throw reason.response
         })
 
 }

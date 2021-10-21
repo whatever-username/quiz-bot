@@ -57,19 +57,18 @@ app.post('/login',async (req, res) => {
     return res.sendStatus(403);
 });
 app.post('/login/bot_code',async (req, res) => {
-
     let body = req.body;
     if (!body || !body.username){
-        res.send('Не указан username пользователя');
+        res.status(404).send('Не указан username пользователя');
     }
     let username = body.username;
     let user= await db.getUserByUsername(username);
     if(!user){
-        res.send('Пользователь не найден');
+        res.status(404).send('Пользователь не найден');
         return
     }
     if (AUTH_CODES_CACHE[user.id]){
-        res.send('Таймаут на отправку кода');
+        res.status(500).send('Таймаут на отправку кода');
         return
     }
     let code = '';
@@ -77,10 +76,18 @@ app.post('/login/bot_code',async (req, res) => {
         code=code.concat(parseInt(Math.random()*10))
     }
     let text = "Код будет действителен в течение 60 секунд\n"+code
-    let resp = await axios.post("https://api.telegram.org/bot"+BOT_TOKEN+"/sendMessage", null, { params: {
-            chat_id:user.id,
-            text: text
-        }});
+    let resp;
+    try{
+        resp = await axios.post("https://api.telegram.org/bot"+BOT_TOKEN+"/sendMessage", null, { params: {
+                chat_id:user.id,
+                text: text
+            }});
+    }catch (err){
+        if (err.response.data.description==='Bad Request: chat not found'){
+            res.status(500).send('Бот не был запущен на этом аккаунте. Невозможно отправить код')
+            return
+        }
+    }
     AUTH_CODES_CACHE[user.id]=code
     setTimeout(()=>{
         delete AUTH_CODES_CACHE[user.id]

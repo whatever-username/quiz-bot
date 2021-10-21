@@ -9,17 +9,17 @@
           <v-text-field outlined dense placeholder="Код" v-if="codeSent"
                         v-model="code"
           ></v-text-field>
-          <v-btn v-if="codeSent" @click="checkCode">Отправить код</v-btn>
+          <v-btn v-if="codeSent" @click="checkCode">Проверить код</v-btn>
           <v-btn :disabled="getCodeButtonBlocked" @click="getCode">
-            {{ getCodeButtonBlocked ? getCodeButtonTimeout : "Проверить код" }}
+            {{ getCodeButtonBlocked ? getCodeButtonTimeout : "Отправить код" }}
           </v-btn>
         </div>
 
       </v-card>
-          <vue-telegram-login
-              mode="callback"
-              telegram-login="mark_quiz_bot"
-              @callback="login"/>
+      <vue-telegram-login
+          mode="callback"
+          telegram-login="mark_quiz_bot"
+          @callback="login"/>
 
     </div>
 
@@ -67,7 +67,7 @@ export default {
     }
   },
   methods: {
-    logout(){
+    logout() {
       delete localStorage.token
       this.reload()
     },
@@ -93,24 +93,25 @@ export default {
       }
     },
     async getCode() {
-      let res = await auth.getCode(this.telegramUsername)
-      if (res.data) {
-        if (res.data === "Код отправлен") {
-          this.showSuccess(res.data)
-          this.getCodeButtonBlocked = true;
-          this.codeSent = true
-          setInterval(() => {
-            this.getCodeButtonTimeout = this.getCodeButtonTimeout - 1;
-            if (this.getCodeButtonTimeout < 0) {
-              this.getCodeButtonBlocked = false;
-              this.getCodeButtonTimeout = 60
-            }
-          }, 1000)
-
-        } else {
-          this.showError(res.data)
-        }
+      let res;
+      try {
+        res = await auth.getCode(this.telegramUsername)
+      } catch (e) {
+        this.showError(e.data)
         return
+      }
+      if (res.data === "Код отправлен") {
+        this.showSuccess(res.data)
+        this.getCodeButtonBlocked = true;
+        this.codeSent = true
+        setInterval(() => {
+          this.getCodeButtonTimeout = this.getCodeButtonTimeout - 1;
+          if (this.getCodeButtonTimeout < 0) {
+            this.getCodeButtonBlocked = false;
+            this.getCodeButtonTimeout = 60
+          }
+        }, 1000)
+
       }
     },
     async login(user) {
@@ -122,12 +123,12 @@ export default {
       }
     },
   },
-   computed:{
-     getStorageToken(){
-       return localStorage.token
+  computed: {
+    getStorageToken() {
+      return localStorage.token
 
-     }
-   }
+    }
+  }
 }
 </script>
 

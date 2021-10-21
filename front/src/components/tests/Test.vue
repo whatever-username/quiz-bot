@@ -17,8 +17,10 @@
             Настройки теста
           </v-expansion-panel-header>
           <v-expansion-panel-content>
-              <v-text-field hide-details v-model="defaultAnswerTime" label="Время на ответ (секунд) для всех вопросов" dense outlined
-                            class="centered-input text--darken-3" type="number" placeholder="30" min="10"
+              <v-text-field hide-details
+                            v-if="test.type==='quiz'"
+                            v-model="defaultAnswerTime" label="Время на ответ (секунд) для всех вопросов" dense outlined
+                            class="centered-input text--darken-3" type="number" placeholder="30" min="5"
                             oninput="setTimeout(()=>{
                               if(Number(this.value) > Number(this.max)) this.value = this.max;if(Number(this.value) < Number(this.min)) this.value = this.min;
                             },1000)"
@@ -145,7 +147,9 @@ export default {
       test: {},
       defaultAnswerTime: null,
       dataLoading:true,
-      savedAlertPopup: false
+      savedAlertPopup: false,
+      awaitingTimeVal: false
+
     }
   },
   created() {
@@ -161,8 +165,25 @@ export default {
   watch:{
     defaultAnswerTime: function (val){
       this.test.questions.forEach(value => {
-        value.time = val;
+        value.time = val
       })
+      if (!this.awaitingTimeVal) {
+        setTimeout(() => {
+          if(Number(val) > Number(600)) {
+            val = 600;
+
+          }
+          if(Number(val) < Number(5)) {
+              val = 5;
+          }
+
+          this.awaitingTimeVal = false;
+        }, 1000); // 1 sec delay
+      }
+
+      this.awaitingTimeVal = true;
+
+
     }
   }
 }

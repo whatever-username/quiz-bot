@@ -6,11 +6,10 @@
       >
         {{ "Вопрос №" + (this.index + 1) }}
         <v-spacer></v-spacer>
-        <v-text-field hide-details v-model="question.time" label="Время на ответ (секунд)" dense outlined
-                      class="centered-input text--darken-3" type="number" placeholder="30" min="10"
-                      oninput="setTimeout(()=>{
-                              if(Number(this.value) > Number(this.max)) this.value = this.max;if(Number(this.value) < Number(this.min)) this.value = this.min;
-                            },1000)"
+        <v-text-field
+            v-if="type==='quiz'"
+            hide-details v-model="question.time" label="Время на ответ (секунд)" dense outlined
+                      class="centered-input text--darken-3" type="number" placeholder="30" min="5"
                       max="600"></v-text-field>
         <v-icon color="white" @click="updateQuestionPosition('up')">mdi-arrow-up</v-icon>
         <v-icon color="white" @click="updateQuestionPosition('down')">mdi-arrow-down</v-icon>
@@ -89,7 +88,8 @@ export default {
   data() {
     return {
       answersSizeAlertShown: false,
-      question: this.value
+      question: this.value,
+      awaitingTimeVal: false
     }
   },
   mounted() {
@@ -150,9 +150,27 @@ export default {
       this.$emit("deleteQuestion");
     }
   },
+  watch:{
+    question:{
+      deep: true,
+      handler: function (val) {
+        if (!this.awaitingTimeVal) {
+          setTimeout(() => {
+            if(Number(val.time) > Number(600)) {
+              this.question.time = 600;
+            }
+            if(Number(val.time) < Number(5)) {
+              this.question.time = 5;
+            }
+            this.awaitingTimeVal = false;
+          }, 1000); // 1 sec delay
+        }
+        this.awaitingTimeVal = true;
+      }
+    }
+  }
 
 }
-
 </script>
 
 <style scoped>

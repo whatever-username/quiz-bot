@@ -11,12 +11,15 @@ axios.interceptors.request.use(req => {
     req.headers["Authorization"] = 'Bearer ' + token;
     return req;
 })
-axios.interceptors.response.use(response => {
+
+axios.interceptors.response.use(function (response) {
+    // Any status code that lie within the range of 2xx cause this function to trigger
+    // Do something with response data
     return response;
-}, error => {
+}, function (error) {
     if (error.response.status === 401) {
         delete localStorage.token;
         router.push("/login");
     }
-    return error;
-})
+    return Promise.reject(error);
+});

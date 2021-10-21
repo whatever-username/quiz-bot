@@ -31,6 +31,13 @@ function getDefaultQuestionJSON(type) {
                 correct: false
             }
         ]
+        return {
+            id: create_UUID(),
+            text: "",
+            answerComment: "",
+            time: 60,
+            answers: answers
+        };
     }else {
         answers=[
             {
@@ -41,15 +48,15 @@ function getDefaultQuestionJSON(type) {
                 id: create_UUID(),
                 text: ''
             }
-        ]
+        ];
+        return {
+            id: create_UUID(),
+            text: "",
+            answerComment: "",
+            answers: answers
+        };
     }
-    return {
-        id: create_UUID(),
-        text: "",
-        answerComment: "",
-        time: 60,
-        answers: answers
-    };
+
 }
 
 function getDefaultAnswerJSON() {
