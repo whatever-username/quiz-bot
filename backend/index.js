@@ -176,7 +176,20 @@ app.delete('/tests/:testId', authenticateJWT,async (req, res) => {
     res.json({error:true})
 });
 
-
+app.post('/user_answers',authenticateJWT,async (req, res) => {
+    if (req.body){
+        try {
+            let result = await db.saveUserAnswer(req.body)
+            res.json(result);
+            return
+        }catch (error){
+            console.log(error)
+            res.send(error.message).sendStatus(error.code)
+            return
+        }
+    }
+    res.json({error:true})
+});
 
 
 app.listen(

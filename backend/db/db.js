@@ -200,6 +200,30 @@ module.exports= {
             client.close();
         }
     },
+
+    saveUserAnswer: async function (userAnswer) {
+        if (!userAnswer.user_id || !userAnswer.test_id){
+            throw {code:400, message: "user_id or test_id not specified"}
+        }
+        try {
+            client = await getMongoConn();
+            let db = client.db(dbName);
+            let dCollection = db.collection('user_answers');
+            let check = await dCollection.find(
+                {user_id: userAnswer.user_id, test_id: userAnswer.test_id}
+            ).toArray();
+
+            if (check.length>0){
+                throw {code:500, message: "User's answer for this question already exists"}
+            }
+            let result = await dCollection.insertOne(userAnswer)
+            return result
+        } catch (err) {
+            throw err;
+        } finally {
+            client.close();
+        }
+    },
 }
 
 async function getMongoConn() {
