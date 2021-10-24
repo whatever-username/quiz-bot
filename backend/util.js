@@ -24,11 +24,12 @@ module.exports = {
 
     },
     sign: async function (payload) {
-        var token = jwt.sign(payload, JWT_SECRET_KEY, {expiresIn: 60 * 60*999999});
+        var token = jwt.sign(payload, JWT_SECRET_KEY, {expiresIn: 60 * 60});
         return token;
     },
     verify: async function (token) {
         var decoded = jwt.verify(token, JWT_SECRET_KEY);
         return decoded;
     }
+
 }

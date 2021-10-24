@@ -31,7 +31,8 @@ module.exports= {
             let db = client.db(dbName);
             let dCollection = db.collection('tests');
             let result = await dCollection.find(
-                {user_id: userId, _id: ObjectId(testId)}
+                {user_id: userId, _id: ObjectId(testId)},
+                {projection: {user_answers: 0}}
             ).toArray();
             return result.length > 0 ? result[0] : null;
         } catch (err) {
@@ -46,7 +47,9 @@ module.exports= {
             let db = client.db(dbName);
             let dCollection = db.collection('tests');
             let result = await dCollection.find(
-                {_id: ObjectId(testId)}
+                {_id: ObjectId(testId)},
+                {projection: {user_answers: 0}}
+
             ).toArray();
             return result.length > 0 ? result[0] : null;
         } catch (err) {
@@ -60,7 +63,7 @@ module.exports= {
             var client = await getMongoConn();
             let db = client.db(dbName);
             let dCollection = db.collection('tests');
-            let result = await dCollection.find({user_id: userId}, {projection: {"user_id": false}}).toArray();
+            let result = await dCollection.find({user_id: userId}, {projection: {"user_id": false, user_answers:0}}).toArray();
             return result;
         } catch (err) {
             console.error(err);
@@ -68,10 +71,10 @@ module.exports= {
             client.close();
         }
     },
-    addTest: async function (test, userId) {
+    addTest: async function (test, user) {
         try {
             client = await getMongoConn();
-            test.user_id = userId;
+            test.user_id = user.role==="admin" ? test.user_id : user.id;
             test._id = ObjectId(test._id);
             db = client.db(dbName);
             let dCollection = db.collection('tests');
@@ -85,17 +88,17 @@ module.exports= {
             client.close();
         } // make sure to close your connection after
     },
-    editTest: async function (id, test, userId) {
+    editTest: async function (id, test, user) {
         try {
             client = await getMongoConn();
             db = client.db(dbName);
             let dCollection = db.collection('tests');
-            test.user_id = userId;
+            test.user_id = user.role==="admin" ? test.user_id : user.id;
             test._id = ObjectId(id);
-            const filter = {_id: ObjectId(id), user_id: userId};
+            const filter = {_id: ObjectId(id), user_id: (user.role==="admin" ? test.user_id : user.id)};
 
             let result = await dCollection.replaceOne(filter, test);
-            return await this.getTestById(test._id, userId);
+            return await this.getTestById(test._id, (user.role==="admin" ? test.user_id : user.id));
         } catch (err) {
             throw err
         } // catch any mongo error here
@@ -103,12 +106,17 @@ module.exports= {
             client.close();
         } // make sure to close your connection after
     },
-    deleteTest: async function (id, userId) {
+    deleteTest: async function (id, user) {
         try {
             client = await getMongoConn();
             db = client.db(dbName);
             let dCollection = db.collection('tests');
-            let res = await dCollection.deleteOne({_id: ObjectId(id), user_id: userId});
+            let res;
+            if (user.role==='admin'){
+                res = await dCollection.deleteOne({_id: ObjectId(id)});
+            }else {
+                res = await dCollection.deleteOne({_id: ObjectId(id), user_id: user.id});
+            }
             return res;
         } catch (err) {
             throw err
@@ -201,22 +209,37 @@ module.exports= {
         }
     },
 
-    saveUserAnswer: async function (userAnswer) {
+    saveUserAnswer: async function (userAnswer, userFromToken) {
+        console.log(userAnswer)
+        console.log(userFromToken)
+        if (userFromToken.role!=="admin"){
+            throw {code: 405}
+        }
         if (!userAnswer.user_id || !userAnswer.test_id){
             throw {code:400, message: "user_id or test_id not specified"}
         }
         try {
             client = await getMongoConn();
             let db = client.db(dbName);
-            let dCollection = db.collection('user_answers');
+            let dCollection = db.collection('tests');
             let check = await dCollection.find(
-                {user_id: userAnswer.user_id, test_id: userAnswer.test_id}
+                {
+                    _id: ObjectId(userAnswer.test_id),
+                    user_answers: {
+                        $elemMatch:{user_id: userAnswer.user_id}
+                    }
+                }
             ).toArray();
 
             if (check.length>0){
-                throw {code:500, message: "User's answer for this question already exists"}
+                throw {code:500, message: "User's answer for this question already exists or test not found"}
             }
-            let result = await dCollection.insertOne(userAnswer)
+            let test_id = userAnswer.test_id;
+            delete userAnswer.test_id;
+            let result = await dCollection.updateOne(
+                {_id: ObjectId(test_id)},
+                { $push : {"user_answers": userAnswer}}
+            )
             return result
         } catch (err) {
             throw err;
@@ -224,6 +247,53 @@ module.exports= {
             client.close();
         }
     },
+    getUserAnswersByFilter: async function(filter, tokenUser){
+        let filterUser = filter.user_id;
+        let filterTest = filter.test_id;
+        let filterCreator = filter.creator;
+        console.log(filter)
+        console.log(tokenUser)
+        try {
+            client = await getMongoConn();
+            let db = client.db(dbName);
+            let dCollection = db.collection('tests');
+
+            let filter = {};
+            if (tokenUser.role==='admin'){
+                if (!filterCreator || !filterTest){
+                    throw {code:400, message:"creator or test_id not specified"}
+                }
+                filter = {
+                    user_id : filterCreator,
+                    _id : ObjectId(filterTest)
+                }
+            }else {
+                if (!filterTest){
+                    throw {code:400, message:"test_id not specified"}
+                }
+                filter = {
+                    user_id : tokenUser.id,
+                    _id : ObjectId(filterTest)
+                }
+            }
+            let projection = {user_answers:1}
+
+            let res = await dCollection.find(filter, {projection : projection}).toArray();
+            console.log(res)
+            res = res.map(s=> {
+                s.id = s._id;
+                delete s._id;
+                return s;
+            })
+            return res
+        } catch (err) {
+            throw err;
+        } finally {
+            client.close();
+        }
+    },
+
+
 }
 
 async function getMongoConn() {

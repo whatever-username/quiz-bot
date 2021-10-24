@@ -141,7 +141,7 @@ app.get('/tests/:testId', authenticateJWT,async (req, res) => {
 app.post('/tests',authenticateJWT,async (req, res) => {
     if (req.body){
         try {
-            let result = await db.addTest(req.body, req.user.id)
+            let result = await db.addTest(req.body, req.user)
             res.json(result);
             return
         }catch (error){
@@ -154,7 +154,7 @@ app.post('/tests',authenticateJWT,async (req, res) => {
 app.put('/tests/:testId', authenticateJWT,async (req, res) => {
     console.log(req.params.testId)
     if (req.params.testId){
-        let result = await db.editTest(req.params.testId, req.body, req.user.id)
+        let result = await db.editTest(req.params.testId, req.body, req.user)
         res.json(result);
         return
     }
@@ -164,7 +164,7 @@ app.delete('/tests/:testId', authenticateJWT,async (req, res) => {
     try {
 
         if (req.params.testId){
-            let result = await db.deleteTest(req.params.testId, req.user.id)
+            let result = await db.deleteTest(req.params.testId, req.user)
             res.json(result);
             return
         }
@@ -179,19 +179,37 @@ app.delete('/tests/:testId', authenticateJWT,async (req, res) => {
 app.post('/user_answers',authenticateJWT,async (req, res) => {
     if (req.body){
         try {
-            let result = await db.saveUserAnswer(req.body)
+            let result = await db.saveUserAnswer(req.body, req.user)
             res.json(result);
             return
         }catch (error){
             console.log(error)
-            res.send(error.message).sendStatus(error.code)
+            res.status(error.code).send(error.message)
+            return
+        }
+    }
+    res.json({error:true})
+});
+app.post('/user_answers/filter',authenticateJWT,async (req, res) => {
+    if (req.body){
+        try {
+            let result = await db.getUserAnswersByFilter(req.body, req.user)
+            res.json(result);
+            return
+        }catch (error){
+            console.log(error)
+            res.status(error.code).send(error.message)
             return
         }
     }
     res.json({error:true})
 });
 
+test()
 
+async function test(){
+    // await db.getUserAnswersByFilter({user_id: 74374352, test_id: "616b168627ddad42c110044a"})
+}
 app.listen(
     port,
 
