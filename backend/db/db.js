@@ -25,13 +25,14 @@ module.exports= {
             client.close();
         }
     },
-    getTestById: async function (testId, userId) {
+    getTestById: async function (testId, userFromToken) {
         try {
             var client = await getMongoConn();
             let db = client.db(dbName);
             let dCollection = db.collection('tests');
+            let filter = userFromToken.role==="admin" ? {_id: ObjectId(testId)} : {user_id: userFromToken.id, _id: ObjectId(testId)};
             let result = await dCollection.find(
-                {user_id: userId, _id: ObjectId(testId)},
+                filter,
                 {projection: {user_answers: 0}}
             ).toArray();
             return result.length > 0 ? result[0] : null;
@@ -41,23 +42,23 @@ module.exports= {
             client.close();
         }
     },
-    getTestById: async function (testId) {
-        try {
-            var client = await getMongoConn();
-            let db = client.db(dbName);
-            let dCollection = db.collection('tests');
-            let result = await dCollection.find(
-                {_id: ObjectId(testId)},
-                {projection: {user_answers: 0}}
-
-            ).toArray();
-            return result.length > 0 ? result[0] : null;
-        } catch (err) {
-            console.error(err);
-        } finally {
-            client.close();
-        }
-    },
+    // getTestById: async function (testId) {
+    //     try {
+    //         var client = await getMongoConn();
+    //         let db = client.db(dbName);
+    //         let dCollection = db.collection('tests');
+    //         let result = await dCollection.find(
+    //             {_id: ObjectId(testId)},
+    //             {projection: {user_answers: 0}}
+    //
+    //         ).toArray();
+    //         return result.length > 0 ? result[0] : null;
+    //     } catch (err) {
+    //         console.error(err);
+    //     } finally {
+    //         client.close();
+    //     }
+    // },
     getTestsByUserId: async function (userId) {
         try {
             var client = await getMongoConn();
@@ -72,15 +73,17 @@ module.exports= {
         }
     },
     addTest: async function (test, user) {
+
         try {
             client = await getMongoConn();
-            test.user_id = user.role==="admin" ? test.user_id : user.id;
-            test._id = ObjectId(test._id);
             db = client.db(dbName);
             let dCollection = db.collection('tests');
 
+            test.user_id = user.role==="admin" ? test.user_id : user.id;
+            test._id = ObjectId(test._id);
+            test.created_at=new Date();
             let result = await dCollection.insertOne(test);
-            return await this.getTestById(result.insertedId, userId);
+            return await this.getTestById(result.insertedId, user);
         } catch (err) {
             throw err
         } // catch any mongo error here

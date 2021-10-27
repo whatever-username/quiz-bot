@@ -123,7 +123,7 @@ app.post('/login/bot_code/check',async (req, res) => {
 
     res.sendStatus(404);
 });
-
+//todo implement ep for fetching tests by userId for bot
 app.get('/tests', authenticateJWT,async (req, res) => {
     let tests = await db.getTestsByUserId(req.user.id)
 
@@ -132,7 +132,7 @@ app.get('/tests', authenticateJWT,async (req, res) => {
 app.get('/tests/:testId', authenticateJWT,async (req, res) => {
     console.log(req.params.testId)
     if (req.params.testId){
-        let result = await db.getTestById(req.params.testId, req.user.id)
+        let result = await db.getTestById(req.params.testId, req.user)
         res.json(result);
         return
     }
