@@ -276,10 +276,7 @@ module.exports = {
                 }
                 filter = {
                     user_id: filterCreator,
-                    _id: ObjectId(filterTest),
-                    user_answers: {
-                        $elemMatch: {user_id: filterUser}
-                    }
+                    _id: ObjectId(filterTest)
                 }
             } else {
                 if (!filterTest) {
@@ -287,10 +284,12 @@ module.exports = {
                 }
                 filter = {
                     user_id: tokenUser.id,
-                    _id: ObjectId(filterTest),
-                    user_answers: {
-                        $elemMatch: {user_id: filterUser}
-                    }
+                    _id: ObjectId(filterTest)
+                }
+            }
+            if (filterUser) {
+                filter.user_answers = {
+                    $elemMatch: {user_id: filterUser}
                 }
             }
             let projection = {user_answers: 1}
@@ -298,10 +297,11 @@ module.exports = {
             let res = await dCollection.find(filter, {projection: projection}).toArray();
             console.log(res)
             res = res.map(s => {
-                if (filterUser){}
-                s.user_answers  = s.user_answers.filter(ua=>{
-                    return ua.user_id===filterUser;
-                })
+                if (filterUser) {
+                    s.user_answers = s.user_answers.filter(ua => {
+                        return ua.user_id === filterUser;
+                    })
+                }
                 s.id = s._id;
                 delete s._id;
                 return s;
