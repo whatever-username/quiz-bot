@@ -125,7 +125,7 @@ app.post('/login/bot_code/check',async (req, res) => {
 });
 //todo implement ep for fetching tests by userId for bot
 app.get('/tests', authenticateJWT,async (req, res) => {
-    let tests = await db.getTestsByUserId(req.user.id)
+    let tests = await db.getTestsByUser(req.user)
 
     res.json(tests);
 });

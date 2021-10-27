@@ -10,7 +10,7 @@ console.log(user)
 console.log(pass)
 console.log(dbName)
 console.log(dbAddress)
-module.exports= {
+module.exports = {
 
     getTests: async function () {
         try {
@@ -30,7 +30,10 @@ module.exports= {
             var client = await getMongoConn();
             let db = client.db(dbName);
             let dCollection = db.collection('tests');
-            let filter = userFromToken.role==="admin" ? {_id: ObjectId(testId)} : {user_id: userFromToken.id, _id: ObjectId(testId)};
+            let filter = userFromToken.role === "admin" ? {_id: ObjectId(testId)} : {
+                user_id: userFromToken.id,
+                _id: ObjectId(testId)
+            };
             let result = await dCollection.find(
                 filter,
                 {projection: {user_answers: 0}}
@@ -59,12 +62,18 @@ module.exports= {
     //         client.close();
     //     }
     // },
-    getTestsByUserId: async function (userId) {
+    getTestsByUser: async function (user) {
         try {
             var client = await getMongoConn();
             let db = client.db(dbName);
             let dCollection = db.collection('tests');
-            let result = await dCollection.find({user_id: userId}, {projection: {"user_id": false, user_answers:0}}).toArray();
+            let result;
+            if (user.role === 'admin') {
+                result = await dCollection.find({}, {projection: {user_answers: 0}}).toArray();
+            } else {
+                result = await dCollection.find({user_id: userId}, {projection: {user_answers: 0}}).toArray();
+            }
+
             return result;
         } catch (err) {
             console.error(err);
@@ -79,9 +88,9 @@ module.exports= {
             db = client.db(dbName);
             let dCollection = db.collection('tests');
 
-            test.user_id = user.role==="admin" ? test.user_id : user.id;
+            test.user_id = user.role === "admin" ? test.user_id : user.id;
             test._id = ObjectId(test._id);
-            test.created_at=new Date();
+            test.created_at = new Date();
             let result = await dCollection.insertOne(test);
             return await this.getTestById(result.insertedId, user);
         } catch (err) {
@@ -96,12 +105,12 @@ module.exports= {
             client = await getMongoConn();
             db = client.db(dbName);
             let dCollection = db.collection('tests');
-            test.user_id = user.role==="admin" ? test.user_id : user.id;
+            test.user_id = user.role === "admin" ? test.user_id : user.id;
             test._id = ObjectId(id);
-            const filter = {_id: ObjectId(id), user_id: (user.role==="admin" ? test.user_id : user.id)};
+            const filter = {_id: ObjectId(id), user_id: (user.role === "admin" ? test.user_id : user.id)};
 
             let result = await dCollection.replaceOne(filter, test);
-            return await this.getTestById(test._id, (user.role==="admin" ? test.user_id : user.id));
+            return await this.getTestById(test._id, (user.role === "admin" ? test.user_id : user.id));
         } catch (err) {
             throw err
         } // catch any mongo error here
@@ -115,9 +124,9 @@ module.exports= {
             db = client.db(dbName);
             let dCollection = db.collection('tests');
             let res;
-            if (user.role==='admin'){
+            if (user.role === 'admin') {
                 res = await dCollection.deleteOne({_id: ObjectId(id)});
-            }else {
+            } else {
                 res = await dCollection.deleteOne({_id: ObjectId(id), user_id: user.id});
             }
             return res;
@@ -195,19 +204,18 @@ module.exports= {
             console.log(update)
             let set = {};
             let unset = {};
-            Object.keys(update).forEach(s =>{
-                if (update[s]){
-                    set[s]=update[s];
-                }else {
-                    unset[s]=update[s];
+            Object.keys(update).forEach(s => {
+                if (update[s]) {
+                    set[s] = update[s];
+                } else {
+                    unset[s] = update[s];
                 }
             })
-            let query= {$set:set,$unset:unset};
-            let res = await dCollection.updateOne({_id:userId},query);
+            let query = {$set: set, $unset: unset};
+            let res = await dCollection.updateOne({_id: userId}, query);
         } catch (err) {
             console.error(err);
-        }
-        finally {
+        } finally {
             client.close();
         }
     },
@@ -215,11 +223,11 @@ module.exports= {
     saveUserAnswer: async function (userAnswer, userFromToken) {
         console.log(userAnswer)
         console.log(userFromToken)
-        if (userFromToken.role!=="admin"){
+        if (userFromToken.role !== "admin") {
             throw {code: 405}
         }
-        if (!userAnswer.user_id || !userAnswer.test_id){
-            throw {code:400, message: "user_id or test_id not specified"}
+        if (!userAnswer.user_id || !userAnswer.test_id) {
+            throw {code: 400, message: "user_id or test_id not specified"}
         }
         try {
             client = await getMongoConn();
@@ -229,19 +237,19 @@ module.exports= {
                 {
                     _id: ObjectId(userAnswer.test_id),
                     user_answers: {
-                        $elemMatch:{user_id: userAnswer.user_id}
+                        $elemMatch: {user_id: userAnswer.user_id}
                     }
                 }
             ).toArray();
 
-            if (check.length>0){
-                throw {code:500, message: "User's answer for this question already exists or test not found"}
+            if (check.length > 0) {
+                throw {code: 500, message: "User's answer for this question already exists or test not found"}
             }
             let test_id = userAnswer.test_id;
             delete userAnswer.test_id;
             let result = await dCollection.updateOne(
                 {_id: ObjectId(test_id)},
-                { $push : {"user_answers": userAnswer}}
+                {$push: {"user_answers": userAnswer}}
             )
             return result
         } catch (err) {
@@ -250,7 +258,7 @@ module.exports= {
             client.close();
         }
     },
-    getUserAnswersByFilter: async function(filter, tokenUser){
+    getUserAnswersByFilter: async function (filter, tokenUser) {
         let filterUser = filter.user_id;
         let filterTest = filter.test_id;
         let filterCreator = filter.creator;
@@ -262,28 +270,28 @@ module.exports= {
             let dCollection = db.collection('tests');
 
             let filter = {};
-            if (tokenUser.role==='admin'){
-                if (!filterCreator || !filterTest){
-                    throw {code:400, message:"creator or test_id not specified"}
+            if (tokenUser.role === 'admin') {
+                if (!filterCreator || !filterTest) {
+                    throw {code: 400, message: "creator or test_id not specified"}
                 }
                 filter = {
-                    user_id : filterCreator,
-                    _id : ObjectId(filterTest)
+                    user_id: filterCreator,
+                    _id: ObjectId(filterTest)
                 }
-            }else {
-                if (!filterTest){
-                    throw {code:400, message:"test_id not specified"}
+            } else {
+                if (!filterTest) {
+                    throw {code: 400, message: "test_id not specified"}
                 }
                 filter = {
-                    user_id : tokenUser.id,
-                    _id : ObjectId(filterTest)
+                    user_id: tokenUser.id,
+                    _id: ObjectId(filterTest)
                 }
             }
-            let projection = {user_answers:1}
+            let projection = {user_answers: 1}
 
-            let res = await dCollection.find(filter, {projection : projection}).toArray();
+            let res = await dCollection.find(filter, {projection: projection}).toArray();
             console.log(res)
-            res = res.map(s=> {
+            res = res.map(s => {
                 s.id = s._id;
                 delete s._id;
                 return s;
