@@ -123,9 +123,9 @@ app.post('/login/bot_code/check',async (req, res) => {
 
     res.sendStatus(404);
 });
-//todo implement ep for fetching tests by userId for bot
+
 app.get('/tests', authenticateJWT,async (req, res) => {
-    let tests = await db.getTestsByUser(req.user)
+    let tests = await db.getTestsByFilter(req.user, req.query)
 
     res.json(tests);
 });
@@ -152,7 +152,6 @@ app.post('/tests',authenticateJWT,async (req, res) => {
     res.json({error:true})
 });
 app.put('/tests/:testId', authenticateJWT,async (req, res) => {
-    console.log(req.params.testId)
     if (req.params.testId){
         let result = await db.editTest(req.params.testId, req.body, req.user)
         res.json(result);

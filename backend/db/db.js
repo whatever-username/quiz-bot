@@ -62,16 +62,27 @@ module.exports = {
     //         client.close();
     //     }
     // },
-    getTestsByUser: async function (user) {
+    getTestsByFilter: async function (user, filter) {
+        console.log(user)
+        console.log(filter)
         try {
             var client = await getMongoConn();
             let db = client.db(dbName);
             let dCollection = db.collection('tests');
             let result;
+            let dbFilter = {}
+            if (filter.type){
+                dbFilter.type=filter.type;
+            }
             if (user.role === 'admin') {
-                result = await dCollection.find({}, {projection: {user_answers: 0}}).toArray();
+                if (filter.creator){
+                    dbFilter.user_id=Number(filter.creator);
+                }
+                console.log(dbFilter)
+                result = await dCollection.find(dbFilter, {projection: {user_answers: 0}}).toArray();
             } else {
-                result = await dCollection.find({user_id: userId}, {projection: {user_answers: 0}}).toArray();
+                dbFilter.user_id=user.id;
+                result = await dCollection.find(dbFilter, {projection: {user_answers: 0}}).toArray();
             }
 
             return result;
