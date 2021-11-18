@@ -71,17 +71,17 @@ module.exports = {
             let dCollection = db.collection('tests');
             let result;
             let dbFilter = {}
-            if (filter.type){
-                dbFilter.type=filter.type;
+            if (filter.type) {
+                dbFilter.type = filter.type;
             }
             if (user.role === 'admin') {
-                if (filter.creator){
-                    dbFilter.user_id=Number(filter.creator);
+                if (filter.creator) {
+                    dbFilter.user_id = Number(filter.creator);
                 }
                 console.log(dbFilter)
                 result = await dCollection.find(dbFilter, {projection: {user_answers: 0}}).toArray();
             } else {
-                dbFilter.user_id=user.id;
+                dbFilter.user_id = user.id;
                 result = await dCollection.find(dbFilter, {projection: {user_answers: 0}}).toArray();
             }
 
@@ -231,37 +231,57 @@ module.exports = {
         }
     },
 
-    saveUserAnswer: async function (userAnswer, userFromToken) {
-        console.log(userAnswer)
-        console.log(userFromToken)
+    saveUserAnswers: async function (userAnswers, userFromToken) {
         if (userFromToken.role !== "admin") {
             throw {code: 405}
         }
-        if (!userAnswer.user_id || !userAnswer.test_id) {
-            throw {code: 400, message: "user_id or test_id not specified"}
+        let testIds = new Set();
+        let userIds = new Set();
+        userAnswers.forEach(ua => {
+            if (!ua.user_id || !ua.test_id) {
+                throw {code: 400, message: "user_id or test_id not specified"}
+            }
+            testIds.add(ua.test_id);
+            userIds.add(ua.user_id);
+        })
+        if (testIds.size > 1) {
+            console.log(testIds)
+            throw {code: 400, message: "answers refer different test ids"}
         }
+        if (userIds.size != userAnswers.length) {
+            throw {code: 400, message: "users count doesn't match answers count"}
+        }
+        let test_id=Array.from(testIds)[0];
         try {
             client = await getMongoConn();
             let db = client.db(dbName);
             let dCollection = db.collection('tests');
+
             let check = await dCollection.find(
                 {
-                    _id: ObjectId(userAnswer.test_id),
+                    _id: ObjectId(test_id),
                     user_answers: {
-                        $elemMatch: {user_id: userAnswer.user_id}
+                        $elemMatch: {
+                            user_id: {$in: Array.from(userIds)}
+
+                        }
                     }
                 }
             ).toArray();
-
             if (check.length > 0) {
-                throw {code: 500, message: "User's answer for this question already exists or test not found"}
+                throw {code: 500, message: "One of the user's answer for this question already exists or test not found"}
             }
-            let test_id = userAnswer.test_id;
-            delete userAnswer.test_id;
+            for (let i = 0; i < userAnswers.length; i++) {
+                delete userAnswers[i].test_id;
+            }
+
             let result = await dCollection.updateOne(
                 {_id: ObjectId(test_id)},
-                {$push: {"user_answers": userAnswer}}
+                {$push: {"user_answers": {$each:userAnswers}}}
             )
+
+
+
             return result
         } catch (err) {
             throw err;
